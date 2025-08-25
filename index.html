@@ -1,0 +1,819 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Central de Exercícios - Prof. Isaac</title>
+    <!-- Tailwind CSS para um design moderno -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fonte do Google para uma melhor aparência -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Fira+Code&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .font-mono {
+            font-family: 'Fira Code', monospace;
+        }
+        .fade-in-up {
+            animation: fadeInUp 0.5s ease-out forwards;
+            opacity: 0;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Esconde as ferramentas por padrão */
+        #tool-equations, #tool-fractions, #tool-polynomials, #tool-poly-division {
+            display: none;
+        }
+        /* Ajuste para o <sup> não bagunçar a altura da linha */
+        sup {
+            line-height: 0;
+        }
+        .feedback-btn.selected {
+            transform: scale(1.1);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 flex items-center justify-center min-h-screen p-4">
+
+    <!-- Tela de Login (inicia oculta) -->
+    <div id="login-container" class="bg-white w-full max-w-sm rounded-xl shadow-lg p-6 md:p-8 text-center hidden">
+        <h1 class="text-2xl font-bold text-slate-800">Acesso Restrito</h1>
+        <p class="text-slate-600 mt-2">Por favor, insira a senha para continuar.</p>
+        <div class="mt-6">
+            <input type="password" id="password-input" class="w-full text-center border-2 border-slate-300 rounded-md p-3 focus:outline-none focus:border-indigo-500" placeholder="********">
+            <p id="error-message" class="text-red-500 text-sm mt-2 h-5"></p>
+        </div>
+        <div class="mt-4">
+            <button id="login-btn" class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 transition-colors shadow-md">Entrar</button>
+        </div>
+    </div>
+
+    <!-- Menu Principal (inicia visível) -->
+    <div id="main-menu" class="bg-white w-full max-w-lg rounded-xl shadow-lg p-6 md:p-8 text-center">
+        <h1 class="text-2xl md:text-3xl font-bold text-slate-800">Central de Exercícios</h1>
+        <p class="text-slate-600 mt-2">Escolha uma ferramenta abaixo para começar.</p>
+        <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <button onclick="showTool('equations')" class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 transition-colors shadow-md">Resolvedor de Equações</button>
+            <button onclick="showTool('fractions')" class="w-full bg-teal-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-teal-700 transition-colors shadow-md">Calculadora de Frações</button>
+            <button onclick="showTool('polynomials')" class="w-full bg-purple-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-purple-700 transition-colors shadow-md">Soma/Subtração de Polinômios</button>
+            <button onclick="showTool('poly-division')" class="w-full bg-red-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-red-700 transition-colors shadow-md">Divisão de Polinômios</button>
+        </div>
+        <div class="text-center mt-8 pt-4 border-t border-slate-200">
+            <p class="text-xs text-slate-400">Desenvolvido por Professor Isaac</p>
+        </div>
+    </div>
+
+    <!-- Ferramenta: Resolvedor de Equações -->
+    <div id="tool-equations" class="bg-white w-full max-w-lg rounded-xl shadow-lg p-6 md:p-8 hidden">
+        <button onclick="showMenu()" class="text-sm text-indigo-600 font-semibold mb-4">&larr; Voltar ao Menu</button>
+        <div class="text-center">
+            <h1 class="text-2xl md:text-3xl font-bold text-slate-800">Resolvedor de Equação do 1º Grau</h1>
+            <p class="text-slate-600 mt-2">Digite a equação completa ou gere um exemplo.</p>
+        </div>
+        <div class="mt-8">
+            <input type="text" id="equation-input" class="w-full text-center text-xl font-mono bg-slate-100 border-2 border-slate-300 rounded-md p-3 focus:outline-none focus:border-indigo-500" placeholder="Ex: 2(a + 3) = a - 5">
+        </div>
+        <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <button id="example-btn" class="w-full bg-slate-200 text-slate-800 font-bold py-3 px-4 rounded-lg hover:bg-slate-300 transition-colors">Me dê um exemplo</button>
+            <button id="solve-btn" class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 shadow-md">Resolver Passo a Passo</button>
+        </div>
+        <div id="solution-container-equations" class="mt-8"></div>
+    </div>
+
+    <!-- Ferramenta: Calculadora de Frações -->
+    <div id="tool-fractions" class="bg-white w-full max-w-lg rounded-xl shadow-lg p-6 md:p-8 hidden">
+        <button onclick="showMenu()" class="text-sm text-teal-600 font-semibold mb-4">&larr; Voltar ao Menu</button>
+        <div class="text-center">
+            <h1 class="text-2xl md:text-3xl font-bold text-slate-800">Calculadora de Frações</h1>
+            <p class="text-slate-600 mt-2">Digite as frações e escolha a operação.</p>
+        </div>
+        <div class="mt-8 flex items-center justify-center gap-4">
+            <div class="flex flex-col items-center"><input id="num1" type="number" class="w-20 text-center text-xl font-bold bg-slate-100 border-2 border-slate-300 rounded-md p-2"><div class="border-t-2 border-slate-800 w-full my-1"></div><input id="den1" type="number" class="w-20 text-center text-xl font-bold bg-slate-100 border-2 border-slate-300 rounded-md p-2"></div>
+            <select id="operator" class="text-3xl font-bold h-12 bg-white border-none focus:outline-none"><option value="+">+</option><option value="-">-</option><option value="*">×</option><option value="/">÷</option></select>
+            <div class="flex flex-col items-center"><input id="num2" type="number" class="w-20 text-center text-xl font-bold bg-slate-100 border-2 border-slate-300 rounded-md p-2"><div class="border-t-2 border-slate-800 w-full my-1"></div><input id="den2" type="number" class="w-20 text-center text-xl font-bold bg-slate-100 border-2 border-slate-300 rounded-md p-2"></div>
+        </div>
+        <div class="mt-6"><button id="solve-fraction-btn" class="w-full bg-teal-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-teal-700 shadow-md">Calcular Passo a Passo</button></div>
+        <div id="solution-container-fractions" class="mt-8"></div>
+    </div>
+
+    <!-- Ferramenta: Operações com Polinômios -->
+    <div id="tool-polynomials" class="bg-white w-full max-w-lg rounded-xl shadow-lg p-6 md:p-8 hidden">
+        <button onclick="showMenu()" class="text-sm text-purple-600 font-semibold mb-4">&larr; Voltar ao Menu</button>
+        <div class="text-center">
+            <h1 class="text-2xl md:text-3xl font-bold text-slate-800">Soma/Subtração de Polinômios</h1>
+            <p class="text-slate-600 mt-2">Digite os polinômios e escolha a operação.</p>
+        </div>
+        <div class="mt-8 space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Polinômio A:</label>
+                <input id="poly-a-input" type="text" class="w-full text-center text-xl font-mono bg-slate-100 border-2 border-slate-300 rounded-md p-3" placeholder="3g² + 2g - 5">
+            </div>
+            <div class="flex justify-center">
+                <select id="poly-operator" class="text-3xl font-bold h-12 bg-white border-none focus:outline-none">
+                    <option value="+">+</option>
+                    <option value="-">-</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Polinômio B:</label>
+                <input id="poly-b-input" type="text" class="w-full text-center text-xl font-mono bg-slate-100 border-2 border-slate-300 rounded-md p-3" placeholder="g² - 4g + 7">
+            </div>
+        </div>
+        <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <button id="poly-example-btn" class="w-full bg-slate-200 text-slate-800 font-bold py-3 px-4 rounded-lg hover:bg-slate-300 transition-colors">Me dê um exemplo</button>
+            <button id="solve-poly-btn" class="w-full bg-purple-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-purple-700 shadow-md">Calcular Passo a Passo</button>
+        </div>
+        <div id="solution-container-polynomials" class="mt-8"></div>
+    </div>
+
+    <!-- Ferramenta: Divisão de Polinômios -->
+    <div id="tool-poly-division" class="bg-white w-full max-w-2xl rounded-xl shadow-lg p-6 md:p-8 hidden">
+        <button onclick="showMenu()" class="text-sm text-red-600 font-semibold mb-4">&larr; Voltar ao Menu</button>
+        <div class="text-center">
+            <h1 class="text-2xl md:text-3xl font-bold text-slate-800">Divisão de Polinômios</h1>
+            <p class="text-slate-600 mt-2">Utilizando o algoritmo da divisão.</p>
+        </div>
+        <div class="mt-6">
+            <label class="block text-center text-sm font-medium text-slate-700 mb-2">Qual valor você quer encontrar?</label>
+            <div class="flex justify-center flex-wrap gap-4 text-sm">
+                <label class="flex items-center"><input type="radio" name="poly-division-mode" value="findQnR" checked class="mr-2">Quociente e Resto</label>
+                <label class="flex items-center"><input type="radio" name="poly-division-mode" value="findP" class="mr-2">Dividendo</label>
+                <label class="flex items-center"><input type="radio" name="poly-division-mode" value="findD" class="mr-2">Divisor</label>
+            </div>
+        </div>
+        <div id="poly-division-inputs" class="mt-4 space-y-4"></div>
+        <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <button id="poly-division-example-btn" class="w-full bg-slate-200 text-slate-800 font-bold py-3 px-4 rounded-lg hover:bg-slate-300 transition-colors">Me dê um exemplo</button>
+            <button id="solve-poly-division-btn" class="w-full bg-red-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-red-700 shadow-md">Calcular Passo a Passo</button>
+        </div>
+        <div id="solution-container-poly-division" class="mt-8"></div>
+    </div>
+
+
+    <script>
+        // --- LÓGICA DE NAVEGAÇÃO E GERAL ---
+        (function() {
+            const loginContainer = document.getElementById('login-container');
+            const mainMenu = document.getElementById('main-menu');
+            const tools = {
+                equations: document.getElementById('tool-equations'),
+                fractions: document.getElementById('tool-fractions'),
+                polynomials: document.getElementById('tool-polynomials'),
+                'poly-division': document.getElementById('tool-poly-division')
+            };
+            
+            window.showTool = (toolName) => {
+                mainMenu.style.display = 'none';
+                Object.values(tools).forEach(tool => tool.style.display = 'none');
+                tools[toolName].style.display = 'block';
+            };
+
+            window.showMenu = () => {
+                Object.values(tools).forEach(tool => tool.style.display = 'none');
+                mainMenu.style.display = 'block';
+            };
+
+            loginContainer.style.display = 'none';
+            mainMenu.style.display = 'block';
+            mainMenu.classList.add('fade-in-up');
+
+            window.addFeedbackButtons = (container) => {
+                const feedbackDiv = document.createElement('div');
+                feedbackDiv.className = 'mt-6 pt-4 border-t border-slate-200 flex justify-center items-center gap-4 fade-in-up';
+                feedbackDiv.innerHTML = `
+                    <p class="text-sm font-semibold text-slate-600">Essa explicação foi útil?</p>
+                    <button class="feedback-btn p-2 rounded-full hover:bg-green-200 transition-all duration-200 opacity-70">👍</button>
+                    <button class="feedback-btn p-2 rounded-full hover:bg-red-200 transition-all duration-200 opacity-70">❓</button>
+                `;
+                container.appendChild(feedbackDiv);
+
+                const buttons = feedbackDiv.querySelectorAll('.feedback-btn');
+                buttons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        buttons.forEach(btn => btn.classList.remove('selected', 'bg-green-200', 'bg-red-200'));
+                        button.classList.add('selected');
+                        if (button.textContent.includes('👍')) {
+                            button.classList.add('bg-green-200');
+                        } else {
+                            button.classList.add('bg-red-200');
+                        }
+                    });
+                });
+            };
+        })();
+
+        // --- LÓGICA DO RESOLVEDOR DE EQUAÇÕES ---
+        (function() {
+            const container = document.getElementById('tool-equations');
+            const equationInput = container.querySelector('#equation-input');
+            const solveBtn = container.querySelector('#solve-btn');
+            const exampleBtn = container.querySelector('#example-btn');
+            const solutionContainer = container.querySelector('#solution-container-equations');
+            
+            function formatFractionHTML(n, d, size = 'text-xl') {
+                return `<div class="inline-flex flex-col items-center font-mono ${size}"><span>${n}</span><div class="border-t-2 border-current w-full"></div><span>${d}</span></div>`;
+            }
+
+            function addEqStep(title, content, delay = 0) {
+                const stepDiv = document.createElement('div');
+                stepDiv.style.animationDelay = `${delay}s`;
+                stepDiv.className = 'bg-slate-50 p-4 rounded-lg mb-3 border border-slate-200 fade-in-up';
+                stepDiv.innerHTML = `<p class="text-sm font-semibold text-slate-500">${title}</p><div class="text-center text-xl font-mono text-indigo-700 mt-2 flex justify-center items-center gap-4">${content}</div>`;
+                solutionContainer.appendChild(stepDiv);
+            }
+
+            function displayEqError(message) {
+                solutionContainer.innerHTML = `<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg text-center">${message}</div>`;
+            }
+
+            function generateEquationExample() {
+                solutionContainer.innerHTML = '';
+                const variables = ['x', 'y', 'a', 'z', 'm'];
+                const variable = variables[Math.floor(Math.random() * variables.length)];
+                const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+                let equation = '';
+                const type = getRandomInt(1, 4);
+
+                let a, c;
+                do { a = getRandomInt(-10, 10); c = getRandomInt(-10, 10); } while (a === c || a === 0);
+                let b = getRandomInt(-10, 10);
+                let d = getRandomInt(-10, 10);
+
+                switch (type) {
+                    case 1: equation = `${a}${variable} ${b >= 0 ? '+' : '-'} ${Math.abs(b)} = ${c}`; break;
+                    case 2: equation = `${a}${variable} ${b >= 0 ? '+' : '-'} ${Math.abs(b)} = ${c}${variable} ${d >= 0 ? '+' : '-'} ${Math.abs(d)}`; break;
+                    case 3: equation = `${a}(${variable} ${b >= 0 ? '+' : '-'} ${Math.abs(b)}) = ${c}`; break;
+                    case 4: equation = `${a}(${variable} ${b >= 0 ? '+' : '-'} ${Math.abs(b)}) = ${c}(${variable} ${d >= 0 ? '+' : '-'} ${Math.abs(d)})`; break;
+                }
+                
+                equation = equation.replace(/1(?=[a-zA-Z])/g, '').replace(/\+ -/g, '- ').replace(/--/g, '+ ');
+                equationInput.value = equation;
+            }
+            
+            function solveEquation() {
+                solutionContainer.innerHTML = '';
+                let originalEq = equationInput.value;
+                let eq = originalEq.replace(/,/g, '.').replace(/\s/g, '');
+                if (!eq.includes('=')) return displayEqError("A equação precisa ter um sinal de igual (=).");
+                addEqStep('1. Equação Original', originalEq, 0);
+                const variableMatch = eq.match(/[a-zA-Z]/);
+                if (!variableMatch) return displayEqError("Nenhuma incógnita (letra) foi encontrada na equação.");
+                const variable = variableMatch[0];
+                let [leftStr, rightStr] = eq.split('=');
+                if (!leftStr || !rightStr) return displayEqError("A equação precisa ter termos em ambos os lados do igual.");
+                
+                const parseSide = (sideStr, v) => {
+                    let xCoeff = 0, constant = 0;
+                    const processedStr = sideStr.trim().startsWith('-') || sideStr.trim().startsWith('+') ? sideStr.trim() : '+' + sideStr.trim();
+                    const regex = new RegExp(`[+-]?\\s*(\\d*\\.?\\d*${v}|\\d*\\.?\\d*)`, 'g');
+                    const terms = processedStr.match(regex) || [];
+                    for (const term of terms) {
+                        const cleanTerm = term.replace(/\s/g, '');
+                        if (cleanTerm.includes(v)) {
+                            let coeffStr = cleanTerm.replace(v, '');
+                            if (coeffStr === '+') xCoeff += 1;
+                            else if (coeffStr === '-') xCoeff -= 1;
+                            else xCoeff += parseFloat(coeffStr);
+                        } else if (cleanTerm) {
+                            constant += parseFloat(cleanTerm);
+                        }
+                    }
+                    return { xCoeff, constant };
+                };
+                
+                const expandParentheses = (str, v) => {
+                    const regex = /([+-]?\s*\d*\.?\d*)\s*\(([^)]+)\)/g;
+                    let expandedStr = str;
+                    while (regex.test(expandedStr)) {
+                         expandedStr = expandedStr.replace(regex, (match, multiplierStr, innerExpression) => {
+                            multiplierStr = multiplierStr.replace(/\s/g, '');
+                            let multiplier = 1;
+                            if (multiplierStr === '' || multiplierStr === '+') multiplier = 1;
+                            else if (multiplierStr === '-') multiplier = -1;
+                            else multiplier = parseFloat(multiplierStr);
+                            const { xCoeff, constant } = parseSide(innerExpression, v);
+                            const expandedX = xCoeff * multiplier;
+                            const expandedConst = constant * multiplier;
+                            let replacement = '';
+                            if (expandedX !== 0) replacement += (expandedX > 0 ? '+' : '') + expandedX + v;
+                            if (expandedConst !== 0) replacement += (expandedConst > 0 ? '+' : '') + expandedConst;
+                            return replacement;
+                        });
+                    }
+                    return expandedStr.replace(/--/g, '+').replace(/\+-/g, '-');
+                };
+
+                let expandedLeft = expandParentheses(leftStr, variable);
+                let expandedRight = expandParentheses(rightStr, variable);
+                
+                if (expandedLeft !== leftStr || expandedRight !== rightStr) {
+                    let displayEq = `${expandedLeft.replace(/\+/g, ' + ').replace(/-/g, ' - ')} = ${expandedRight.replace(/\+/g, ' + ').replace(/-/g, ' - ')}`;
+                    addEqStep("2. Aplicar a propriedade distributiva (chuveirinho)", displayEq.replace(/ \+ -/g, ' - ').replace(/^ \+ /g, ''), 0.2);
+                }
+                
+                const leftSide = parseSide(expandedLeft, variable);
+                const rightSide = parseSide(expandedRight, variable);
+                const finalXCoeff = leftSide.xCoeff - rightSide.xCoeff;
+                const finalConstant = rightSide.constant - leftSide.constant;
+                addEqStep(`3. Mover termos com '${variable}' para a esquerda e constantes para a direita.`, `${leftSide.xCoeff}${variable} ${rightSide.xCoeff >= 0 ? '-' : '+'} ${Math.abs(rightSide.xCoeff)}${variable} = ${rightSide.constant} ${leftSide.constant >= 0 ? '-' : '+'} ${Math.abs(leftSide.constant)}`, 0.4);
+                addEqStep('4. Simplificar ambos os lados.', `${finalXCoeff}${variable} = ${finalConstant}`, 0.6);
+                if (finalXCoeff === 0) { return displayEqError(finalConstant === 0 ? "Infinitas soluções." : "Nenhuma solução."); }
+                
+                const divisionStepContent = `
+                    <div class="flex justify-center items-center gap-4">
+                        ${formatFractionHTML(finalXCoeff + variable, finalXCoeff)}
+                        <span>=</span>
+                        ${formatFractionHTML(finalConstant, finalXCoeff)}
+                    </div>`;
+                addEqStep(`5. Dividir ambos os membros pelo coeficiente de '${variable}'`, divisionStepContent, 0.8);
+
+                const finalResult = finalConstant / finalXCoeff;
+                const resultDiv = document.createElement('div');
+                resultDiv.style.animationDelay = '1s';
+                resultDiv.className = 'bg-green-100 p-4 rounded-lg mt-4 border border-green-400 fade-in-up';
+                resultDiv.innerHTML = `<p class="text-sm font-semibold text-green-800">Resultado Final</p><p class="text-center text-2xl font-bold font-mono text-green-900 mt-2">${variable} = ${Number.isInteger(finalResult) ? finalResult : finalResult.toFixed(4)}</p>`;
+                solutionContainer.appendChild(resultDiv);
+                window.addFeedbackButtons(solutionContainer);
+            }
+            solveBtn.addEventListener('click', solveEquation);
+            exampleBtn.addEventListener('click', generateEquationExample);
+            equationInput.addEventListener('keyup', (e) => { if (e.key === 'Enter') solveEquation(); });
+        })();
+
+
+        // --- LÓGICA DA CALCULADORA DE FRAÇÕES ---
+        (function() {
+            const container = document.getElementById('tool-fractions');
+            const num1 = container.querySelector('#num1');
+            const den1 = container.querySelector('#den1');
+            const num2 = container.querySelector('#num2');
+            const den2 = container.querySelector('#den2');
+            const operator = container.querySelector('#operator');
+            const solveFractionBtn = container.querySelector('#solve-fraction-btn');
+            const solutionContainer = container.querySelector('#solution-container-fractions');
+
+            const gcd = (a, b) => { a = Math.abs(a); b = Math.abs(b); while(b) [a, b] = [b, a % b]; return a; };
+            const lcm = (a, b) => (a === 0 || b === 0) ? 0 : Math.abs(a * b) / gcd(a, b);
+
+            function formatFractionHTML(n, d, size = 'text-xl') {
+                return `<div class="inline-flex flex-col items-center font-mono ${size}"><span>${n}</span><div class="border-t-2 border-current w-full"></div><span>${d}</span></div>`;
+            }
+
+            function addFracStep(title, content, delay = 0) {
+                const stepDiv = document.createElement('div');
+                stepDiv.style.animationDelay = `${delay}s`;
+                stepDiv.className = 'bg-slate-50 p-4 rounded-lg mb-3 border border-slate-200 fade-in-up';
+                stepDiv.innerHTML = `<p class="text-sm font-semibold text-slate-500">${title}</p><div class="text-center text-xl font-mono text-teal-700 mt-2 flex items-center justify-center gap-4">${content}</div>`;
+                solutionContainer.appendChild(stepDiv);
+            }
+
+            function solveFraction() {
+                solutionContainer.innerHTML = '';
+                const n1 = parseInt(num1.value);
+                const d1 = parseInt(den1.value);
+                const n2 = parseInt(num2.value);
+                const d2 = parseInt(den2.value);
+                const op = operator.value;
+
+                if (isNaN(n1) || isNaN(d1) || isNaN(n2) || isNaN(d2)) {
+                    solutionContainer.innerHTML = `<div class="bg-red-100 border-red-400 text-red-700 p-3 rounded-lg text-center">Preencha todos os campos.</div>`;
+                    return;
+                }
+                if (d1 === 0 || d2 === 0) {
+                    solutionContainer.innerHTML = `<div class="bg-red-100 border-red-400 text-red-700 p-3 rounded-lg text-center">O denominador não pode ser zero.</div>`;
+                    return;
+                }
+
+                let resultNum, resultDen;
+
+                if (op === '+' || op === '-') {
+                    const mmc = lcm(d1, d2);
+                    addFracStep('1. Encontrar o MMC dos denominadores.', `MMC(${d1}, ${d2}) = ${mmc}`, 0);
+                    const newN1 = (mmc / d1) * n1;
+                    const newN2 = (mmc / d2) * n2;
+                    let step2Content = `<p class="text-base">Ajustar os numeradores:</p><div class="flex items-center gap-2">${formatFractionHTML(newN1, mmc)}<span class="text-3xl">${op}</span>${formatFractionHTML(newN2, mmc)}</div>`;
+                    addFracStep('2. Reescrever as frações com o novo denominador.', step2Content, 0.2);
+                    resultNum = (op === '+') ? newN1 + newN2 : newN1 - newN2;
+                    resultDen = mmc;
+                    addFracStep('3. Realizar a operação com os numeradores.', `${newN1} ${op} ${newN2} = ${resultNum}`, 0.4);
+                } else if (op === '*') {
+                    addFracStep('1. Multiplicar os numeradores e os denominadores.', `${formatFractionHTML(n1, d1)} <span class="text-3xl">×</span> ${formatFractionHTML(n2, d2)}`, 0);
+                    resultNum = n1 * n2;
+                    resultDen = d1 * d2;
+                } else if (op === '/') {
+                    addFracStep('1. Manter a primeira e multiplicar pelo inverso da segunda.', `${formatFractionHTML(n1, d1)} <span class="text-3xl">×</span> ${formatFractionHTML(d2, n2)}`, 0);
+                    resultNum = n1 * d2;
+                    resultDen = d1 * n2;
+                    if (resultDen === 0) {
+                        solutionContainer.innerHTML = `<div class="bg-red-100 border-red-400 text-red-700 p-3 rounded-lg text-center">Divisão por zero no resultado.</div>`;
+                        return;
+                    }
+                }
+
+                const commonDivisor = gcd(resultNum, resultDen);
+                const finalNum = resultNum / commonDivisor;
+                const finalDen = resultDen / commonDivisor;
+
+                let finalContent = formatFractionHTML(resultNum, resultDen, 'text-2xl font-bold');
+                if (commonDivisor !== 1 && resultDen !== commonDivisor) {
+                    finalContent += `<div class="flex items-center gap-4"><span class="text-2xl">=</span> ${formatFractionHTML(finalNum, finalDen, 'text-2xl font-bold')}</div>`;
+                }
+
+                const resultDiv = document.createElement('div');
+                resultDiv.style.animationDelay = '0.6s';
+                resultDiv.className = 'bg-green-100 p-4 rounded-lg mt-4 border border-green-400 fade-in-up';
+                resultDiv.innerHTML = `<p class="text-sm font-semibold text-green-800">Resultado Final</p><div class="flex items-center justify-center gap-4 text-xl font-mono text-green-900 mt-2">${finalContent}</div>`;
+                solutionContainer.appendChild(resultDiv);
+                window.addFeedbackButtons(solutionContainer);
+            }
+            solveFractionBtn.addEventListener('click', solveFraction);
+        })();
+
+
+        // --- LÓGICA DAS OPERAÇÕES COM POLINÔMIOS ---
+        (function() {
+            const container = document.getElementById('tool-polynomials');
+            const polyAInput = container.querySelector('#poly-a-input');
+            const polyBInput = container.querySelector('#poly-b-input');
+            const polyOperator = container.querySelector('#poly-operator');
+            const solvePolyBtn = container.querySelector('#solve-poly-btn');
+            const exampleBtn = container.querySelector('#poly-example-btn');
+            const solutionContainer = container.querySelector('#solution-container-polynomials');
+
+            function addPolyStep(title, content, delay = 0) {
+                const stepDiv = document.createElement('div');
+                stepDiv.style.animationDelay = `${delay}s`;
+                stepDiv.className = 'bg-slate-50 p-4 rounded-lg mb-3 border border-slate-200 fade-in-up';
+                stepDiv.innerHTML = `<p class="text-sm font-semibold text-slate-500">${title}</p><div class="text-center text-xl font-mono text-purple-700 mt-2">${content}</div>`;
+                solutionContainer.appendChild(stepDiv);
+            }
+
+            function normalizeExponents(polyString) {
+                return polyString.replace(/²/g, '^2').replace(/³/g, '^3').replace(/⁴/g, '^4').replace(/⁵/g, '^5').replace(/⁶/g, '^6').replace(/⁷/g, '^7').replace(/⁸/g, '^8').replace(/⁹/g, '^9');
+            }
+
+            function parsePolynomial(polyString) {
+                const polyMap = new Map();
+                if (!polyString) return polyMap;
+                polyString = polyString.replace(/\s/g, '').replace(/\-/g, '+-');
+                const terms = polyString.split('+').filter(Boolean);
+
+                for (const term of terms) {
+                    const variable = (term.match(/[a-zA-Z]/) || [''])[0];
+                    let coeff = 0;
+                    let key = 'c'; // 'c' for constant
+
+                    if (variable) {
+                        const parts = term.split(variable);
+                        let coeffPart = parts[0];
+                        if (coeffPart === '' || coeffPart === '+') coeff = 1;
+                        else if (coeffPart === '-') coeff = -1;
+                        else coeff = parseFloat(coeffPart);
+
+                        let exp = 1;
+                        if (parts[1]) {
+                            exp = parseFloat(parts[1].replace('^', ''));
+                        }
+                        key = variable + exp;
+                    } else {
+                        coeff = parseFloat(term);
+                    }
+                    polyMap.set(key, (polyMap.get(key) || 0) + coeff);
+                }
+                return polyMap;
+            }
+            
+            function formatPolynomial(polyMap, type = 'html') {
+                if (polyMap.size === 0 || [...polyMap.values()].every(c => Math.abs(c) < 1e-9)) return '0';
+                let result = '';
+                const sortedKeys = [...polyMap.keys()].sort((a, b) => {
+                    const getSortValue = (key) => {
+                        if (key === 'c') return -1;
+                        const exp = parseInt(key.substring(1));
+                        const charCode = key.charCodeAt(0);
+                        return exp * 1000 + charCode;
+                    };
+                    return getSortValue(b) - getSortValue(a);
+                });
+
+                for (const key of sortedKeys) {
+                    const coeff = polyMap.get(key);
+                    if (Math.abs(coeff) < 1e-9) continue;
+                    
+                    let sign = coeff > 0 ? ' + ' : ' - ';
+                    let absCoeff = Math.abs(coeff);
+                    
+                    if (key === 'c') {
+                        result += `${sign}${absCoeff}`;
+                        continue;
+                    }
+
+                    const variable = key.charAt(0);
+                    const exp = parseInt(key.substring(1));
+                    
+                    let coeffStr = (Math.abs(absCoeff - 1) < 1e-9 && exp !== 0) ? '' : absCoeff;
+                    let expStr = '';
+                    if (exp > 1) {
+                        if (type === 'html') {
+                            expStr = `${variable}<sup>${exp}</sup>`;
+                        } else {
+                            const superscripts = {'2':'²', '3':'³', '4':'⁴', '5':'⁵', '6':'⁶', '7':'⁷', '8':'⁸', '9':'⁹'};
+                            expStr = variable + (superscripts[exp] || `^${exp}`);
+                        }
+                    } else if (exp === 1) {
+                        expStr = variable;
+                    }
+                    result += `${sign}${coeffStr}${expStr}`;
+                }
+                
+                if (result.startsWith(' + ')) result = result.substring(3);
+                if (result.startsWith(' - ')) result = '-' + result.substring(3);
+
+                return result || '0';
+            }
+
+            function generateRandomPolynomialMap(maxDegree, maxTerms, variable) {
+                const map = new Map();
+                const degree = Math.floor(Math.random() * maxDegree) + 1;
+                const numTerms = Math.floor(Math.random() * Math.min(degree + 1, maxTerms)) + 1;
+                const exponents = new Set();
+                while(exponents.size < numTerms) {
+                    exponents.add(Math.floor(Math.random() * (degree + 1)));
+                }
+                for(const exp of exponents) {
+                    let coeff;
+                    do { coeff = Math.floor(Math.random() * 19) - 9; } while (coeff === 0);
+                    if (exp === 0) {
+                        map.set('c', coeff);
+                    } else {
+                        map.set(variable + exp, coeff);
+                    }
+                }
+                return map;
+            }
+
+            function generateExample() {
+                solutionContainer.innerHTML = '';
+                const variables = ['x', 'y', 'g', 'a'];
+                const variable = variables[Math.floor(Math.random() * variables.length)];
+                polyAInput.value = formatPolynomial(generateRandomPolynomialMap(4, 3, variable), 'input');
+                polyBInput.value = formatPolynomial(generateRandomPolynomialMap(4, 3, variable), 'input');
+            }
+
+            function solvePolynomial() {
+                solutionContainer.innerHTML = '';
+                
+                const polyAStr = normalizeExponents(polyAInput.value);
+                const polyBStr = normalizeExponents(polyBInput.value);
+                const operator = polyOperator.value;
+
+                if (!polyAInput.value || !polyBInput.value) {
+                    solutionContainer.innerHTML = `<div class="bg-red-100 border-red-400 text-red-700 p-3 rounded-lg text-center">Preencha os dois polinômios.</div>`;
+                    return;
+                }
+
+                const polyA = parsePolynomial(polyAStr);
+                const polyB = parsePolynomial(polyBStr);
+                
+                addPolyStep('1. Montar a operação', `(${polyAInput.value}) ${operator} (${polyBInput.value})`, 0);
+
+                const allKeys = new Set([...polyA.keys(), ...polyB.keys()]);
+                const sortedKeys = [...allKeys].sort((a, b) => {
+                    const getSortValue = (key) => {
+                        if (key === 'c') return -1;
+                        const exp = parseInt(key.substring(1));
+                        const charCode = key.charCodeAt(0);
+                        return exp * 1000 + charCode;
+                    };
+                    return getSortValue(b) - getSortValue(a);
+                });
+
+                let groupingStr = '';
+                for (const key of sortedKeys) {
+                    const coeffA = polyA.get(key) || 0;
+                    const coeffB = polyB.get(key) || 0;
+                    if (coeffA === 0 && coeffB === 0) continue;
+
+                    let termAStr = formatPolynomial(new Map([[key, coeffA]]), 'html');
+                    let termBStr = formatPolynomial(new Map([[key, coeffB]]), 'html');
+                    
+                    let combinedTerm = '';
+                    if (operator === '+') {
+                        if (termBStr.startsWith(' - ')) {
+                            combinedTerm = `(${termAStr} - ${termBStr.substring(3)})`;
+                        } else {
+                            combinedTerm = `(${termAStr} + ${termBStr.replace(/^\+/, '').trim()})`;
+                        }
+                    } else { // Subtração
+                        combinedTerm = `(${termAStr} - (${termBStr}))`;
+                    }
+                    groupingStr += ` + ${combinedTerm}`;
+                }
+                if (groupingStr.startsWith(' + ')) groupingStr = groupingStr.substring(3);
+                addPolyStep('2. Agrupar os termos semelhantes', groupingStr, 0.2);
+
+                const resultMap = new Map();
+                for (const key of sortedKeys) {
+                    const coeffA = polyA.get(key) || 0;
+                    const coeffB = polyB.get(key) || 0;
+                    let resultCoeff = (operator === '+') ? coeffA + coeffB : coeffA - coeffB;
+                    if (Math.abs(resultCoeff) > 1e-9) resultMap.set(key, resultCoeff);
+                }
+                
+                const resultString = formatPolynomial(resultMap, 'html');
+
+                const resultDiv = document.createElement('div');
+                resultDiv.className = 'bg-green-100 p-4 rounded-lg mt-4 border border-green-400 fade-in-up';
+                resultDiv.style.animationDelay = '0.4s';
+                resultDiv.innerHTML = `<p class="text-sm font-semibold text-green-800">Resultado Final</p><p class="text-center text-2xl font-bold font-mono text-green-900 mt-2">${resultString}</p>`;
+                solutionContainer.appendChild(resultDiv);
+                window.addFeedbackButtons(solutionContainer);
+            }
+
+            solvePolyBtn.addEventListener('click', solvePolynomial);
+            exampleBtn.addEventListener('click', generateExample);
+        })();
+
+
+        // --- LÓGICA DA DIVISÃO DE POLINÔMIOS ---
+        (function() {
+            const container = document.getElementById('tool-poly-division');
+            const inputsContainer = container.querySelector('#poly-division-inputs');
+            const solveBtn = container.querySelector('#solve-poly-division-btn');
+            const exampleBtn = container.querySelector('#poly-division-example-btn');
+            const solutionContainer = container.querySelector('#solution-container-poly-division');
+            const modeRadios = container.querySelectorAll('input[name="poly-division-mode"]');
+
+            const createInput = (id, label, placeholder) => `
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">${label}:</label>
+                    <input id="${id}" type="text" class="w-full text-center text-xl font-mono bg-slate-100 border-2 border-slate-300 rounded-md p-3" placeholder="${placeholder}">
+                </div>`;
+
+            function updateUI() {
+                const mode = container.querySelector('input[name="poly-division-mode"]:checked').value;
+                solutionContainer.innerHTML = '';
+                if (mode === 'findQnR') {
+                    inputsContainer.innerHTML = createInput('dividend-input', 'Dividendo P(x)', '4x³ - x² + 2') + createInput('divisor-input', 'Divisor D(x)', 'x² + 1');
+                } else if (mode === 'findP') {
+                    inputsContainer.innerHTML = createInput('divisor-input', 'Divisor D(x)', 'x - 2') + createInput('quotient-input', 'Quociente Q(x)', 'x + 3') + createInput('remainder-input', 'Resto R(x)', '4');
+                } else if (mode === 'findD') {
+                    inputsContainer.innerHTML = createInput('dividend-input', 'Dividendo P(x)', '15x² + 11x + 2') + createInput('quotient-input', 'Quociente Q(x)', '5x + 2') + createInput('remainder-input', 'Resto R(x)', '0');
+                }
+            }
+            
+            const normalize = (s) => s.replace(/²/g, '^2').replace(/³/g, '^3').replace(/⁴/g, '^4').replace(/⁵/g, '^5').replace(/⁶/g, '^6').replace(/⁷/g, '^7').replace(/⁸/g, '^8').replace(/⁹/g, '^9');
+            
+            function parsePoly(s, v) { const p = new Map(); if (!s) return p; s = s.replace(/\s/g, '').replace(/\-/g, '+-'); const ts = s.split('+').filter(Boolean); for (const t of ts) { let c = 0, e = 0; if (t.includes(v)) { const ps = t.split(v); let cp = ps[0]; if (cp === '' || cp === '+') c = 1; else if (cp === '-') c = -1; else c = parseFloat(cp); if (ps[1]) e = parseFloat(ps[1].replace('^', '')); else e = 1; } else { c = parseFloat(t); e = 0; } p.set(e, (p.get(e) || 0) + c); } return p; };
+            
+            function formatPoly(p, v = 'x', type = 'html') { if (p.size === 0 || [...p.values()].every(c => Math.abs(c) < 1e-9)) return '0'; let r = ''; const es = [...p.keys()].sort((a, b) => b - a); for (const e of es) { const c = p.get(e); if (Math.abs(c) < 1e-9) continue; let sign = c > 0 ? ' + ' : ' - '; let ac = Math.abs(c); let cs = (Math.abs(ac - 1) < 1e-9 && e !== 0) ? '' : ac.toFixed(4).replace(/\.?0+$/, ""); let es_ = ''; if (e > 1) { if (type === 'html') { es_ = `${v}<sup>${e}</sup>`; } else { const superscripts = {'2':'²', '3':'³', '4':'⁴', '5':'⁵', '6':'⁶', '7':'⁷', '8':'⁸', '9':'⁹'}; es_ = v + (superscripts[e] || `^${e}`); } } else if (e === 1) { es_ = v; } r += `${sign}${cs}${es_}`; } if (r.startsWith(' + ')) r = r.substring(3); if (r.startsWith(' - ')) r = '-' + r.substring(3); return r || '0'; };
+            
+            const getDegree = (p) => p.size === 0 ? -Infinity : Math.max(...[...p.keys()].filter(k => Math.abs(p.get(k)) > 1e-9));
+            
+            const addPoly = (p1, p2) => { const r = new Map(p1); for (const [e, c] of p2.entries()) { r.set(e, (r.get(e) || 0) + c); } return r; };
+            const subtractPoly = (p1, p2) => { const r = new Map(p1); for (const [e, c] of p2.entries()) { r.set(e, (r.get(e) || 0) - c); } return r; };
+            const multiplyPoly = (p1, p2) => { const r = new Map(); for (const [e1, c1] of p1.entries()) { for (const [e2, c2] of p2.entries()) { r.set(e1 + e2, (r.get(e1 + e2) || 0) + (c1 * c2)); } } return r; };
+            const generateRandomPolynomialMap = (maxDegree, maxTerms) => { const map = new Map(); if (maxDegree < 0) { map.set(0, 0); return map; } const degree = Math.floor(Math.random() * maxDegree) + 1; const numTerms = Math.floor(Math.random() * Math.min(degree + 1, maxTerms)) + 1; const exponents = new Set(); while(exponents.size < numTerms) { exponents.add(Math.floor(Math.random() * (degree + 1))); } for(const exp of exponents) { let coeff; do { coeff = Math.floor(Math.random() * 19) - 9; } while(coeff === 0); map.set(exp, coeff); } return map; };
+
+            function addStep(title, content, delay = 0) {
+                const stepDiv = document.createElement('div');
+                stepDiv.style.animationDelay = `${delay}s`;
+                stepDiv.className = 'bg-slate-50 p-4 rounded-lg mb-3 border border-slate-200 fade-in-up';
+                stepDiv.innerHTML = `<p class="text-sm font-sans font-semibold text-slate-500">${title}</p><div class="text-center text-xl font-mono text-red-700 mt-2">${content}</div>`;
+                solutionContainer.appendChild(stepDiv);
+            }
+
+            function performLongDivision(dividend, divisor, variable) {
+                const maxDegree = getDegree(dividend);
+                for (let i = maxDegree - 1; i >= 0; i--) {
+                    if (!dividend.has(i)) dividend.set(i, 0);
+                }
+                const completeDividendStr = formatPoly(dividend, variable, 'html');
+                let stepsHTML = `<div class="font-mono text-lg p-4 bg-slate-50 rounded-lg overflow-x-auto"><p class="text-sm font-sans text-slate-500 mb-2">Executando a divisão por chave:</p><div class="flex"><div>${completeDividendStr}</div><div class="border-l-2 border-b-2 border-slate-800 px-4 ml-4">${formatPoly(divisor, variable, 'html')}</div></div>`;
+                let quotient = new Map();
+                let remainder = new Map(dividend);
+                let iteration = 0;
+                while (getDegree(remainder) >= getDegree(divisor) && iteration < 20) {
+                    const degreeR = getDegree(remainder);
+                    const degreeD = getDegree(divisor);
+                    const coeffR = remainder.get(degreeR);
+                    const coeffD = divisor.get(degreeD);
+                    const newQuotientExp = degreeR - degreeD;
+                    const newQuotientCoeff = coeffR / coeffD;
+                    quotient.set(newQuotientExp, newQuotientCoeff);
+                    const toSubtract = multiplyPoly(new Map([[newQuotientExp, newQuotientCoeff]]), divisor);
+                    
+                    stepsHTML += `<div class="flex mt-2"><div class="text-red-600"> - (${formatPoly(toSubtract, variable, 'html')})</div><div class="border-l-2 border-slate-800 px-4 ml-4 opacity-0">${formatPoly(divisor, variable, 'html')}</div></div><hr class="border-slate-800 my-1">`;
+                    
+                    remainder = subtractPoly(remainder, toSubtract);
+                    stepsHTML += `<div class="flex"><div>${formatPoly(remainder, variable, 'html')}</div><div class="border-l-2 border-slate-800 px-4 ml-4 opacity-0">${formatPoly(divisor, variable, 'html')}</div></div>`;
+                    iteration++;
+                }
+                stepsHTML = stepsHTML.replace(/<div class="border-l-2 border-b-2[^>]+>/, `<div class="border-l-2 border-slate-800 px-4 ml-4"><div class="border-b-2 border-slate-800">${formatPoly(divisor, variable, 'html')}</div><div class="text-green-600 font-bold">${formatPoly(quotient, variable, 'html')}</div>`);
+                stepsHTML += `</div>`;
+                
+                if (iteration > 0) {
+                    const noteDiv = document.createElement('div');
+                    noteDiv.className = 'text-xs text-slate-500 italic mt-2 p-2';
+                    noteDiv.innerHTML = "Lembre-se: o resultado da multiplicação volta com a operação inversa (subtração) para ser eliminado do dividendo.";
+                    solutionContainer.appendChild(noteDiv);
+                }
+
+                return { stepsHTML, quotient, remainder };
+            }
+
+            function generateExample() {
+                solutionContainer.innerHTML = '';
+                const mode = container.querySelector('input[name="poly-division-mode"]:checked').value;
+                const variable = ['x', 'y', 'a', 'b'][Math.floor(Math.random() * 4)];
+
+                if (mode === 'findQnR') {
+                    const dividendMap = generateRandomPolynomialMap(5, 4);
+                    const divisorMap = generateRandomPolynomialMap(getDegree(dividendMap) - 1, 3);
+                    document.getElementById('dividend-input').value = formatPoly(dividendMap, variable, 'input');
+                    document.getElementById('divisor-input').value = formatPoly(divisorMap, variable, 'input');
+                } else if (mode === 'findP') {
+                    const divisorMap = generateRandomPolynomialMap(2, 2);
+                    const quotientMap = generateRandomPolynomialMap(2, 2);
+                    const remainderMap = generateRandomPolynomialMap(getDegree(divisorMap) - 1, 1);
+                    document.getElementById('divisor-input').value = formatPoly(divisorMap, variable, 'input');
+                    document.getElementById('quotient-input').value = formatPoly(quotientMap, variable, 'input');
+                    document.getElementById('remainder-input').value = formatPoly(remainderMap, variable, 'input');
+                } else if (mode === 'findD') {
+                    const divisorMap = generateRandomPolynomialMap(2, 2);
+                    const quotientMap = generateRandomPolynomialMap(2, 2);
+                    const remainderMap = generateRandomPolynomialMap(getDegree(divisorMap) - 1, 1);
+                    const dividendMap = addPoly(multiplyPoly(divisorMap, quotientMap), remainderMap);
+                    document.getElementById('dividend-input').value = formatPoly(dividendMap, variable, 'input');
+                    document.getElementById('quotient-input').value = formatPoly(quotientMap, variable, 'input');
+                    document.getElementById('remainder-input').value = formatPoly(remainderMap, variable, 'input');
+                }
+            }
+
+            function solve() {
+                solutionContainer.innerHTML = '';
+                const mode = container.querySelector('input[name="poly-division-mode"]:checked').value;
+                const fullInputStr = Array.from(inputsContainer.querySelectorAll('input')).map(i => i.value).join('');
+                const variable = (fullInputStr.match(/[a-zA-Z]/) || ['x'])[0];
+
+                if (mode === 'findQnR') {
+                    const dividend = parsePoly(normalize(document.getElementById('dividend-input').value), variable);
+                    const divisor = parsePoly(normalize(document.getElementById('divisor-input').value), variable);
+                    if (getDegree(divisor) < 0) { solutionContainer.innerHTML = `<div class="bg-red-100 text-red-700 p-3 rounded-lg">Divisor não pode ser zero.</div>`; return; }
+                    
+                    const { stepsHTML, quotient, remainder } = performLongDivision(dividend, divisor, variable);
+                    solutionContainer.innerHTML = stepsHTML;
+
+                    const resultDiv = document.createElement('div');
+                    resultDiv.className = 'bg-green-100 p-4 rounded-lg mt-4 border border-green-400 fade-in-up';
+                    resultDiv.innerHTML = `<p class="text-sm font-semibold text-green-800">Resultado Final</p><p class="text-center text-lg font-mono text-green-900 mt-2">Quociente Q(x) = ${formatPoly(quotient, variable, 'html')}</p><p class="text-center text-lg font-mono text-green-900 mt-1">Resto R(x) = ${formatPoly(remainder, variable, 'html')}</p>`;
+                    solutionContainer.appendChild(resultDiv);
+                } else if (mode === 'findP') {
+                    const D = parsePoly(normalize(document.getElementById('divisor-input').value), variable);
+                    const Q = parsePoly(normalize(document.getElementById('quotient-input').value), variable);
+                    const R = parsePoly(normalize(document.getElementById('remainder-input').value), variable);
+                    addStep('1. Usar a fórmula P(x) = D(x) * Q(x) + R(x)', `P(x) = (${formatPoly(D, variable, 'html')}) * (${formatPoly(Q, variable, 'html')}) + (${formatPoly(R, variable, 'html')})`);
+                    const DQ = multiplyPoly(D, Q);
+                    addStep('2. Multiplicar D(x) por Q(x)', formatPoly(DQ, variable, 'html'));
+                    const P = addPoly(DQ, R);
+                    addStep('3. Somar o resultado com R(x)', formatPoly(P, variable, 'html'));
+                    const resultDiv = document.createElement('div');
+                    resultDiv.className = 'bg-green-100 p-4 rounded-lg mt-4 border border-green-400 fade-in-up';
+                    resultDiv.innerHTML = `<p class="text-sm font-semibold text-green-800">Resultado Final</p><p class="text-center text-lg font-mono text-green-900 mt-2">Dividendo P(x) = ${formatPoly(P, variable, 'html')}</p>`;
+                    solutionContainer.appendChild(resultDiv);
+                } else if (mode === 'findD') {
+                     const P = parsePoly(normalize(document.getElementById('dividend-input').value), variable);
+                     const Q = parsePoly(normalize(document.getElementById('quotient-input').value), variable);
+                     const R = parsePoly(normalize(document.getElementById('remainder-input').value), variable);
+                     addStep('1. Usar a fórmula D(x) = (P(x) - R(x)) / Q(x)', `D(x) = [(${formatPoly(P, variable, 'html')}) - (${formatPoly(R, variable, 'html')})] / (${formatPoly(Q, variable, 'html')})`);
+                     const P_minus_R = subtractPoly(P, R);
+                     addStep('2. Subtrair R(x) de P(x)', formatPoly(P_minus_R, variable, 'html'));
+                     
+                     const { stepsHTML, quotient, remainder } = performLongDivision(P_minus_R, Q, variable);
+                     solutionContainer.innerHTML += stepsHTML;
+
+                     const resultDiv = document.createElement('div');
+                     resultDiv.className = 'bg-green-100 p-4 rounded-lg mt-4 border border-green-400 fade-in-up';
+                     resultDiv.innerHTML = `<p class="text-sm font-semibold text-green-800">Resultado Final</p><p class="text-center text-lg font-mono text-green-900 mt-2">Divisor D(x) = ${formatPoly(quotient, variable, 'html')}</p>`;
+                     if (getDegree(remainder) >= 0) {
+                         resultDiv.innerHTML += `<p class="text-center text-sm font-mono text-orange-600 mt-1">(A divisão não foi exata, Resto = ${formatPoly(remainder, variable, 'html')})</p>`;
+                     }
+                     solutionContainer.appendChild(resultDiv);
+                }
+                window.addFeedbackButtons(solutionContainer);
+            }
+
+            modeRadios.forEach(radio => radio.addEventListener('change', updateUI));
+            solveBtn.addEventListener('click', solve);
+            exampleBtn.addEventListener('click', generateExample);
+            document.addEventListener('DOMContentLoaded', updateUI);
+        })();
+    </script>
+</body>
+</html>
